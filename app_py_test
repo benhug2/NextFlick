@@ -1,0 +1,26 @@
+# test_app.py - Pytest cases for extended Flask application functionalities
+
+import pytest
+from app import app
+
+@pytest.fixture
+def client():
+    with app.test_client() as client:
+        yield client
+
+def test_sortMovies(client):
+    response = client.get('/movies/sort?sortBy=rating')
+    assert response.status_code == 200
+    # Ensure sorted by rating
+    assert response.get_json()[0]['rating'] >= response.get_json()[1]['rating']
+
+def test_getMovie(client):
+    response = client.get('/movies/12345')  # Assuming 12345 is a valid ID
+    assert response.status_code == 200
+    assert response.get_json()[0]['id'] == 12345
+
+def test_updateUserPreferences(client):
+    client.post('/signup', json={'username': 'user1', 'password': 'pass'})
+    response = client.post('/user/preferences', json={'username': 'user1', 'preferences': ['Action', 'Drama']})
+    assert response.status_code == 200
+    assert response.json['message'] == 'Preferences updated'

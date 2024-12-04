@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
+import random
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -9,7 +10,6 @@ usersDb = {}
 userPreferences = {}
 
 # Load movie data from CSV file
-# Make sure tmdb_5000_movies.csv is in the same directory as app.py
 moviesDf = pd.read_csv('tmdb_5000_movies.csv')
 
 @app.route('/')
@@ -48,18 +48,22 @@ def logIn():
 
 @app.route('/movies/search', methods=['GET'])
 def searchMovies():
-    query = request.args.get('query', '')
-    if not query:
-        return jsonify({'message': 'Query parameter is required'}), 400
+    genre = request.args.get('genre', '')
+    language = request.args.get('language', '')
     
-    # Filter movies based on the query in the title
-    filteredMovies = moviesDf[moviesDf['title'].str.contains(query, case=False, na=False)]
+    if not genre or not language:
+        return jsonify({'message': 'Genre and language parameters are required'}), 400
     
-    # If no movies found, return an empty list
-    if filteredMovies.empty:
-        return jsonify([]), 200
+    # Filter movies based on the genre and language
+    filteredMovies = moviesDf[(moviesDf['genres'].str.contains(genre, case=False, na=False)) & 
+                              (moviesDf['original_language'] == language)]
     
-    return jsonify(filteredMovies.to_dict(orient='records')), 200
+    # Randomly select one movie from the filtered list
+    if not filteredMovies.empty:
+        randomMovie = filteredMovies.sample(n=1)
+        return jsonify(randomMovie.to_dict(orient='records')), 200
+    
+    return jsonify({'message': 'No movies found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

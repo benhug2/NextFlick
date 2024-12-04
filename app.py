@@ -10,6 +10,7 @@ usersDb = {}
 userPreferences = {}
 
 # Load movie data from CSV file
+# Ensure the data includes columns for 'genres' and 'original_language'
 moviesDf = pd.read_csv('tmdb_5000_movies.csv')
 
 @app.route('/')
@@ -54,16 +55,19 @@ def searchMovies():
     if not genre or not language:
         return jsonify({'message': 'Genre and language parameters are required'}), 400
     
-    # Filter movies based on the genre and language
-    filteredMovies = moviesDf[(moviesDf['genres'].str.contains(genre, case=False, na=False)) & 
-                              (moviesDf['original_language'] == language)]
-    
-    # Randomly select one movie from the filtered list
-    if not filteredMovies.empty:
-        randomMovie = filteredMovies.sample(n=1)
-        return jsonify(randomMovie.to_dict(orient='records')), 200
-    
-    return jsonify({'message': 'No movies found'}), 404
+    try:
+        # Filter movies based on the genre and language
+        filteredMovies = moviesDf[(moviesDf['genres'].str.contains(genre, case=False, na=False)) &
+                                  (moviesDf['original_language'] == language)]
+        
+        # Randomly select one movie from the filtered list
+        if not filteredMovies.empty:
+            randomMovie = filteredMovies.sample(n=1)
+            return jsonify(randomMovie.to_dict(orient='records')), 200
+        
+        return jsonify({'message': 'No movies found'}), 404
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -8,7 +8,7 @@ NextFlick is a web-based application that provides personalized movie recommenda
 
 Technical Architecture
 
-Frontend (Browser):
+**Frontend (Browser):**
 
 Role in Application: The frontend provides the user interface for interacting with the application. Users can select their mood and language, view recommendations, and interact with features like "Show Me Another Option."
 Interactions:
@@ -18,7 +18,7 @@ Languages/Libraries:
 HTML, CSS (Bootstrap for styling)
 JavaScript (Fetch API for asynchronous requests)
 
-Backend (Flask Server):
+**Backend (Flask Server):**
 
 Role in Application: Handles business logic, processes user requests, and interacts with the data layer to fetch relevant movie recommendations.
 Interactions:
@@ -28,7 +28,7 @@ Languages/Libraries:
 Python (Flask for server-side logic)
 Pandas (for dataset manipulation)
 
-Data Layer:
+**Data Layer:**
 
 Role in Application: Stores and provides access to the movie dataset.
 Interactions:
@@ -38,17 +38,19 @@ CSV file format
 Manipulated using Pandas library in Python.
 Dataset curated from TMDB and used directly in the backend.
 
-Installation Instructions:
+**Installation Instructions:**
 
-Step 1: Install Python
+**Step 1: Install Python**
 
-    Ensure Python is installed on your system. You can download it from the official Python website.
-    Verify the installation:
-      Open a terminal or command prompt.
+Ensure Python is installed on your system. You can download it from the official Python website.
+Verify the installation:
+Open a terminal or command prompt.
+
         Run: python --version (or python3 --version on some systems).
-      If Python is installed, you will see the version number.
         
-Step 2: Clone the Repository
+If Python is installed, you will see the version number.
+        
+**Step 2: Clone the Repository**
 
    Open a terminal or command prompt.
 
@@ -64,13 +66,13 @@ Step 2: Clone the Repository
 
      cd your-repo-name
   
-Step 3: Install Flask and Other Dependencies
+**Step 3: Install Flask and Other Dependencies**
 
    you can install Flask directly:
 
      pip install flask
 
-Step 4: Run the Flask App
+**Step 4: Run the Flask App**
 
    Start the Flask application:
 
@@ -78,6 +80,6 @@ Step 4: Run the Flask App
 
    Once the app starts, you should see output similar to:
 
-   Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+       Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
 
    Open a web browser and go to http://127.0.0.1:5000/ to access the app.

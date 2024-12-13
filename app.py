@@ -10,11 +10,13 @@ moviesDf = pd.read_csv('tmdb_5000_movies.csv')
 def home():
     return render_template('index.html')
 
-@app.route('/movies/by_mood', methods=['GET'])
-def recommendMovieByMood():
+@app.route('/movies/by_mood_and_language', methods=['GET'])
+def recommendMovieByMoodAndLanguage():
     mood = request.args.get('mood', '').strip().lower()
-    if not mood:
-        return jsonify({'message': 'Mood parameter is required'}), 400
+    language = request.args.get('language', '').strip().lower()
+
+    if not mood or not language:
+        return jsonify({'message': 'Mood and language parameters are required'}), 400
 
     # Map moods to genres
     mood_to_genre = {
@@ -29,13 +31,14 @@ def recommendMovieByMood():
     if not genres:
         return jsonify({'message': f'No genres mapped for mood: {mood}'}), 404
 
-    # Filter movies by the genres mapped to the mood
-    filteredMovies = moviesDf[moviesDf['genres'].apply(
-        lambda x: any(genre in x for genre in genres)
-    )]
+    # Filter movies by genre and language
+    filteredMovies = moviesDf[
+        moviesDf['genres'].apply(lambda x: any(genre in x for genre in genres)) &
+        (moviesDf['original_language'] == language)
+    ]
 
     if filteredMovies.empty:
-        return jsonify({'message': f'No movies found for mood: {mood}'}), 404
+        return jsonify({'message': f'No movies found for mood: {mood} and language: {language}'}), 404
 
     # Select a random movie
     random_movie = filteredMovies.sample(n=1)

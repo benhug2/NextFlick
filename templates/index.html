@@ -10,14 +10,15 @@
 <body class="bg-light">
 
 <div class="container my-5">
-    <h1 class="text-center mb-3">🎥 Movie Roulette 🎲</h1>
-    <h5 class="text-center text-muted">Spin the genre wheel and uncover your next favorite movie!</h5>
+    <h1 class="text-center mb-3">🎥 Movie Mania 🎬</h1>
+    <h5 class="text-center text-muted">Movies tailored to your mood and language</h5>
 
-    <!-- Mood-Based Recommendation -->
+    <!-- Mood and Language-Based Recommendation -->
     <div class="card p-4 mt-4">
         <h2>How are you feeling today?</h2>
-        <form id="moodForm">
+        <form id="moodLanguageForm">
             <div class="form-group">
+                <label for="moodDropdown">Select your mood:</label>
                 <select id="moodDropdown" class="form-control" required>
                     <option value="" disabled selected>Select your mood</option>
                     <option value="happy">Happy</option>
@@ -25,6 +26,17 @@
                     <option value="excited">Excited</option>
                     <option value="curious">Curious</option>
                     <option value="relaxed">Relaxed</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="languageDropdown">Select your language:</label>
+                <select id="languageDropdown" class="form-control" required>
+                    <option value="" disabled selected>Select your language</option>
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="it">Italian</option>
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">Get Recommendation</button>
@@ -36,49 +48,63 @@
 </div>
 
 <script>
-    document.getElementById('moodForm').addEventListener('submit', async (event) => {
+    let currentMood = '';
+    let currentLanguage = '';
+
+    document.getElementById('moodLanguageForm').addEventListener('submit', async (event) => {
         event.preventDefault();
 
         const mood = document.getElementById('moodDropdown').value;
+        const language = document.getElementById('languageDropdown').value;
+        currentMood = mood;
+        currentLanguage = language;
         const moodMovieDetailsDiv = document.getElementById('moodMovieDetails');
 
-        if (!mood) {
-            alert('Please select your mood.');
+        if (!mood || !language) {
+            alert('Please select both your mood and language.');
             return;
         }
 
-        // Fetch and display the movie details
-        await fetchAndDisplayMovie(mood, moodMovieDetailsDiv);
-    });
-
-    async function fetchAndDisplayMovie(mood, container) {
         try {
-            const response = await fetch(`/movies/by_mood?mood=${encodeURIComponent(mood)}`);
+            const response = await fetch(`/movies/by_mood_and_language?mood=${encodeURIComponent(mood)}&language=${encodeURIComponent(language)}`);
             if (response.ok) {
                 const movie = await response.json();
-                container.style.display = 'block'; // Make the results visible
-                container.innerHTML = `
-                    <h5>${movie.title}</h5>
-                    <p><strong>Overview:</strong> ${movie.overview || 'No overview available.'}</p>
-                    <p><strong>Release Date:</strong> ${movie.release_date || 'Unknown'}</p>
-                    <p><strong>Rating:</strong> ${movie.vote_average || 'N/A'}</p>
-                    <button id="anotherOption" class="btn btn-secondary mt-3">Show Me Another Option</button>
-                `;
-
-                // Add event listener for "Show Me Another Option" button
-                document.getElementById('anotherOption').addEventListener('click', async () => {
-                    await fetchAndDisplayMovie(mood, container);
-                });
+                displayMovieDetails(movie, moodMovieDetailsDiv);
             } else {
                 const errorData = await response.json();
-                container.style.display = 'block';
-                container.innerHTML = `<p>${errorData.message}</p>`;
+                moodMovieDetailsDiv.style.display = 'block';
+                moodMovieDetailsDiv.innerHTML = `<p>${errorData.message}</p>`;
             }
         } catch (error) {
-            console.error('Error fetching movie by mood:', error);
-            container.style.display = 'block';
-            container.innerHTML = `<p>An error occurred. Please try again later.</p>`;
+            console.error('Error fetching movie:', error);
+            moodMovieDetailsDiv.style.display = 'block';
+            moodMovieDetailsDiv.innerHTML = `<p>An error occurred. Please try again later.</p>`;
         }
+    });
+
+    function displayMovieDetails(movie, container) {
+        container.style.display = 'block';
+        container.innerHTML = `
+            <h5>${movie.title}</h5>
+            <p><strong>Overview:</strong> ${movie.overview || 'No overview available.'}</p>
+            <p><strong>Release Date:</strong> ${movie.release_date || 'Unknown'}</p>
+            <p><strong>Rating:</strong> ${movie.vote_average || 'N/A'}</p>
+            <button id="showAnother" class="btn btn-secondary mt-3">Show Me Another Option</button>
+        `;
+
+        document.getElementById('showAnother').addEventListener('click', async () => {
+            try {
+                const response = await fetch(`/movies/by_mood_and_language?mood=${encodeURIComponent(currentMood)}&language=${encodeURIComponent(currentLanguage)}`);
+                if (response.ok) {
+                    const newMovie = await response.json();
+                    displayMovieDetails(newMovie, container);
+                } else {
+                    alert('Failed to fetch another movie. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error fetching another movie:', error);
+            }
+        });
     }
 </script>
 

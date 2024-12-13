@@ -25,6 +25,22 @@ h5 {
     color: #1e3c72;
 }
 
+.card label {
+    color: #1e3c72; /* Dark blue color for labels */
+}
+
+.card .form-control {
+    color: #333; /* Dark gray for input text */
+}
+
+.card .text-center a {
+    color: #1e3c72; /* Dark blue for links */
+}
+
+.card .text-center p {
+    color: #333; /* Dark gray for text */
+}
+
 .card button {
     background: linear-gradient(to right, #ff7e5f, #feb47b);
     border: none;

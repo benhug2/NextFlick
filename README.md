@@ -42,8 +42,8 @@ Installation Instructions:
 
 Step 1: Install Python
 
-  Ensure Python is installed on your system. You can download it from the official Python website.
-  Verify the installation:
+    Ensure Python is installed on your system. You can download it from the official Python website.
+    Verify the installation:
       Open a terminal or command prompt.
         Run: python --version (or python3 --version on some systems).
       If Python is installed, you will see the version number.
@@ -52,29 +52,29 @@ Step 2: Clone the Repository
 
    Open a terminal or command prompt.
 
-   Navigate to the directory where you want to clone the app:
+  Navigate to the directory where you want to clone the app:
 
-   cd /path/to/your/directory
+     cd /path/to/your/directory
 
-   Clone the GitHub repository:
+  Clone the GitHub repository:
 
-   git clone https://github.com/your-repo-name.git ->edit this
+     git clone https://github.com/CS222-UIUC/MovieGenerate
 
-   Navigate into the cloned directory:
+  Navigate into the cloned directory:
 
-   cd your-repo-name
+     cd your-repo-name
   
 Step 3: Install Flask and Other Dependencies
 
    you can install Flask directly:
 
-   pip install flask
+     pip install flask
 
 Step 4: Run the Flask App
 
    Start the Flask application:
 
-   python app.py
+     python app.py
 
    Once the app starts, you should see output similar to:
 

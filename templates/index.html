@@ -1,109 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Movie Mania</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    </head>
-    <body class="bg-light">
-    
-    <div class="container my-5">
-        <h1 class="text-center mb-3">🎥 Movie Roulette 🎲</h1>
-        <h5 class="text-center text-muted">Spin the genre wheel and uncover your next favorite movie!</h5>
-    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Mania</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
 <body class="bg-light">
 
+<div class="container my-5">
+    <h1 class="text-center mb-3">🎥 Movie Roulette 🎲</h1>
+    <h5 class="text-center text-muted">Spin the genre wheel and uncover your next favorite movie!</h5>
 
-
-    <!-- Genre Selection -->
-    <div class="card p-4 mb-4">
-        <h2>Select a Genre</h2>
-        <form id="genreForm">
+    <!-- Mood-Based Recommendation -->
+    <div class="card p-4 mt-4">
+        <h2>How are you feeling today?</h2>
+        <form id="moodForm">
             <div class="form-group">
-                <select id="genreDropdown" class="form-control" required>
-                    <option value="" disabled selected>Select a genre</option>
-                    <option value="Action">Action</option>
-                    <option value="Adventure">Adventure</option>
-                    <option value="Thriller">Thriller</option>
-                    <option value="Comedy">Comedy</option>
-                    <option value="Drama">Drama</option>
-                    <option value="Science Fiction">Science Fiction</option>
-                    <option value="Family">Family</option>
-                    <option value="Animation">Animation</option>
+                <select id="moodDropdown" class="form-control" required>
+                    <option value="" disabled selected>Select your mood</option>
+                    <option value="happy">Happy</option>
+                    <option value="sad">Sad</option>
+                    <option value="excited">Excited</option>
+                    <option value="curious">Curious</option>
+                    <option value="relaxed">Relaxed</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-info">Search</button>
+            <button type="submit" class="btn btn-primary">Get Recommendation</button>
         </form>
-        <div id="movieDetails" class="mt-3"></div>
+        <div id="moodMovieDetails" class="mt-4 p-3 border rounded bg-light" style="display: none;">
+            <!-- Recommendation details will be displayed here dynamically -->
+        </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('genreForm').addEventListener('submit', async (event) => {
+    document.getElementById('moodForm').addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const genre = document.getElementById('genreDropdown').value;
-        const movieDetailsDiv = document.getElementById('movieDetails');
+        const mood = document.getElementById('moodDropdown').value;
+        const moodMovieDetailsDiv = document.getElementById('moodMovieDetails');
 
-        if (!genre) {
-            alert('Please select a genre.');
+        if (!mood) {
+            alert('Please select your mood.');
             return;
         }
 
-        try {
-            const response = await fetch(`/movies/by_genre?genre=${encodeURIComponent(genre)}`);
-            if (response.ok) {
-                const movie = await response.json();
-                displayMovieDetails(movie, genre, movieDetailsDiv);
-            } else {
-                const errorData = await response.json();
-                movieDetailsDiv.innerHTML = `<p>${errorData.message}</p>`;
-            }
-        } catch (error) {
-            console.error('Error fetching movie by genre:', error);
-            alert('An error occurred. Please try again later.');
-        }
+        // Fetch and display the movie details
+        await fetchAndDisplayMovie(mood, moodMovieDetailsDiv);
     });
 
-    function displayMovieDetails(movie, genre, container) {
-        container.innerHTML = `
-            <h5>${movie.title}</h5>
-            <p><strong>Overview:</strong> ${movie.overview || 'No overview available.'}</p>
-            <p><strong>Release Date:</strong> ${movie.release_date || 'Unknown'}</p>
-            <p><strong>Rating:</strong> ${movie.vote_average || 'N/A'}</p>
-            <button id="tellMeMore" class="btn btn-primary mt-2">Tell Me More</button>
-            <button id="nextOption" class="btn btn-secondary mt-2">Next Option</button>
-        `;
+    async function fetchAndDisplayMovie(mood, container) {
+        try {
+            const response = await fetch(`/movies/by_mood?mood=${encodeURIComponent(mood)}`);
+            if (response.ok) {
+                const movie = await response.json();
+                container.style.display = 'block'; // Make the results visible
+                container.innerHTML = `
+                    <h5>${movie.title}</h5>
+                    <p><strong>Overview:</strong> ${movie.overview || 'No overview available.'}</p>
+                    <p><strong>Release Date:</strong> ${movie.release_date || 'Unknown'}</p>
+                    <p><strong>Rating:</strong> ${movie.vote_average || 'N/A'}</p>
+                    <button id="anotherOption" class="btn btn-secondary mt-3">Show Me Another Option</button>
+                `;
 
-        document.getElementById('tellMeMore').addEventListener('click', async () => {
-            try {
-                const response = await fetch(`/movies/details?title=${encodeURIComponent(movie.title)}`);
-                if (response.ok) {
-                    const details = await response.json();
-                    alert(JSON.stringify(details, null, 2)); // Display movie details
-                } else {
-                    alert('Failed to fetch details.');
-                }
-            } catch (error) {
-                console.error('Error fetching movie details:', error);
+                // Add event listener for "Show Me Another Option" button
+                document.getElementById('anotherOption').addEventListener('click', async () => {
+                    await fetchAndDisplayMovie(mood, container);
+                });
+            } else {
+                const errorData = await response.json();
+                container.style.display = 'block';
+                container.innerHTML = `<p>${errorData.message}</p>`;
             }
-        });
-
-        document.getElementById('nextOption').addEventListener('click', async () => {
-            try {
-                const response = await fetch(`/movies/by_genre?genre=${encodeURIComponent(genre)}`);
-                if (response.ok) {
-                    const newMovie = await response.json();
-                    displayMovieDetails(newMovie, genre, container);
-                } else {
-                    alert('Failed to fetch next movie.');
-                }
-            } catch (error) {
-                console.error('Error fetching next movie:', error);
-            }
-        });
+        } catch (error) {
+            console.error('Error fetching movie by mood:', error);
+            container.style.display = 'block';
+            container.innerHTML = `<p>An error occurred. Please try again later.</p>`;
+        }
     }
 </script>
 

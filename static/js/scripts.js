@@ -1,66 +1,91 @@
-document.getElementById('signupForm').addEventListener('submit', async (event) => {
+document.getElementById('genreForm').addEventListener('submit', async (event) => {
     event.preventDefault();
-    const username = document.getElementById('signupUsername').value;
-    const password = document.getElementById('signupPassword').value;
 
-    const response = await fetch('/signup', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-    });
+    const genre = document.getElementById('genreDropdown').value;
+    const movieDetailsDiv = document.getElementById('movieDetails');
 
-    const data = await response.json();
-    alert(data.message);
-    document.getElementById('signupForm').reset();
-});
+    if (!genre) {
+        alert('Please select a genre.');
+        return;
+    }
 
-document.getElementById('loginForm').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-
-    const response = await fetch('/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-    });
-
-    const data = await response.json();
-    alert(data.message);
-    document.getElementById('loginForm').reset();
-});
-
-document.getElementById('searchForm').addEventListener('submit', async (event) => {
-    event.preventDefault(); // Prevent the form from submitting the traditional way
-
-    const query = document.getElementById('searchQuery').value; // Get the search query input
-
-    // Send a GET request to the search endpoint with the query as a parameter
-    const response = await fetch(`/movies/search?query=${encodeURIComponent(query)}`);
-    
-    if (response.ok) {
-        const movies = await response.json();
-
-        const resultsDiv = document.getElementById('searchResults');
-        resultsDiv.innerHTML = '';  // Clear any previous results
-
-        // Display each movie title in the search results
-        if (movies.length > 0) {
-            movies.forEach(movie => {
-                const movieDiv = document.createElement('div');
-                movieDiv.classList.add('mb-2', 'p-2', 'border', 'rounded'); //styling
-                movieDiv.textContent = `Title: ${movie.title}`;
-                resultsDiv.appendChild(movieDiv);
-            });
+    try {
+        const response = await fetch(`/movies/by_genre?genre=${encodeURIComponent(genre)}`);
+        if (response.ok) {
+            const movie = await response.json();
+            displayMovieDetails(movie, genre, movieDetailsDiv);
         } else {
-            // no results found
-            resultsDiv.innerHTML = '<p>No movies found.</p>';
+            const errorData = await response.json();
+            movieDetailsDiv.innerHTML = `<p>${errorData.message}</p>`;
         }
-    } else {
-        alert("Failed to fetch movies. Please try again.");
+    } catch (error) {
+        console.error('Error fetching movie by genre:', error);
+        alert('An error occurred. Please try again later.');
     }
 });
+
+function displayMovieDetails(movie, genre, container) {
+    container.innerHTML = `
+        <h5>${movie.title}</h5>
+        <p><strong>Overview:</strong> ${movie.overview || 'No overview available.'}</p>
+        <p><strong>Release Date:</strong> ${movie.release_date || 'Unknown'}</p>
+        <p><strong>Rating:</strong> ${movie.vote_average || 'N/A'}</p>
+        <button id="tellMeMore" class="btn btn-primary mt-2">Tell Me More</button>
+        <button id="nextOption" class="btn btn-secondary mt-2">Next Option</button>
+        <div id="detailedInfo" class="mt-3"></div>
+    `;
+
+    document.getElementById('tellMeMore').addEventListener('click', async () => {
+        try {
+            const response = await fetch(`/movies/details?title=${encodeURIComponent(movie.title)}`);
+            if (response.ok) {
+                const details = await response.json();
+                renderDetailedInfo(details);
+            } else {
+                alert('Failed to fetch details.');
+            }
+        } catch (error) {
+            console.error('Error fetching movie details:', error);
+        }
+    });
+
+    document.getElementById('nextOption').addEventListener('click', async () => {
+        try {
+            const response = await fetch(`/movies/by_genre?genre=${encodeURIComponent(genre)}`);
+            if (response.ok) {
+                const newMovie = await response.json();
+                displayMovieDetails(newMovie, genre, container);
+            } else {
+                alert('Failed to fetch next movie.');
+            }
+        } catch (error) {
+            console.error('Error fetching next movie:', error);
+        }
+    });
+}
+
+function renderDetailedInfo(details) {
+    const detailedInfoDiv = document.getElementById('detailedInfo');
+    detailedInfoDiv.innerHTML = `
+        <h6>Full Details:</h6>
+        <p><strong>Title:</strong> ${details.title || 'Unknown'}</p>
+        <p><strong>Overview:</strong> ${details.overview || 'No overview available.'}</p>
+        <p><strong>Release Date:</strong> ${details.release_date || 'Unknown'}</p>
+        <p><strong>Rating:</strong> ${details.vote_average || 'N/A'}</p>
+        <p><strong>Genres:</strong> ${parseGenres(details.genres)}</p>
+        <p><strong>Budget:</strong> ${details.budget ? `$${details.budget.toLocaleString()}` : 'Unknown'}</p>
+        <p><strong>Revenue:</strong> ${details.revenue ? `$${details.revenue.toLocaleString()}` : 'Unknown'}</p>
+        <p><strong>Runtime:</strong> ${details.runtime ? `${details.runtime} minutes` : 'Unknown'}</p>
+        <p><strong>Tagline:</strong> ${details.tagline || 'No tagline available.'}</p>
+        <p><strong>Homepage:</strong> ${details.homepage ? `<a href="${details.homepage}" target="_blank">${details.homepage}</a>` : 'No homepage available.'}</p>
+    `;
+}
+
+function parseGenres(genres) {
+    try {
+        const genreList = JSON.parse(genres || '[]');
+        return genreList.map(genre => genre.name).join(', ') || 'N/A';
+    } catch {
+        return 'N/A';
+    }
+}

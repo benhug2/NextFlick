@@ -1,73 +1,67 @@
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
 import random
-from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# Temporary in-memory user storage
-usersDb = {}
-userPreferences = {}
+# Load movie data
+try:
+    moviesDf = pd.read_csv('tmdb_5000_movies.csv')
+    # Ensure necessary columns
+    moviesDf['genres'] = moviesDf['genres'].fillna('[]')  # Fill missing genres
+    moviesDf['title'] = moviesDf['title'].fillna('Unknown Title')  # Fill missing titles
+except FileNotFoundError:
+    print("Error: The file 'tmdb_5000_movies.csv' was not found.")
+    exit(1)
+except Exception as e:
+    print(f"Error loading CSV: {e}")
+    exit(1)
 
-# Load movie data from CSV file
-# Ensure the data includes columns for 'genres' and 'original_language'
-moviesDf = pd.read_csv('tmdb_5000_movies.csv')
+def get_genre_list():
+    # Extract unique genres from the dataset
+    genres = set()
+    for genre_list in moviesDf['genres']:
+        try:
+            genre_data = eval(genre_list)  # Convert string to list of dicts
+            for genre in genre_data:
+                genres.add(genre['name'])
+        except:
+            continue
+    return sorted(genres)
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/signup', methods=['POST'])
-def signUp():
-    userDetails = request.get_json()
-    username = userDetails.get('username')
-    password = userDetails.get('password')
-    
-    if not username or not password:
-        return jsonify({'message': 'Username and password are required'}), 400
-    
-    if username in usersDb:
-        return jsonify({'message': 'Username already exists'}), 409
+@app.route('/genres', methods=['GET'])
+def fetchGenres():
+    return jsonify(get_genre_list()), 200
 
-    usersDb[username] = generate_password_hash(password)
-    userPreferences[username] = {'preferences': []}  # Initialize preferences
-    return jsonify({'message': 'User created successfully'}), 201
+@app.route('/movies/by_genre', methods=['GET'])
+def getMovieByGenre():
+    genre = request.args.get('genre', '').strip()
+    if not genre:
+        return jsonify({'message': 'Genre parameter is required'}), 400
 
-@app.route('/login', methods=['POST'])
-def logIn():
-    loginDetails = request.get_json()
-    username = loginDetails.get('username')
-    password = loginDetails.get('password')
-    
-    if not username or not password:
-        return jsonify({'message': 'Username and password are required'}), 400
-    
-    if username not in usersDb or not check_password_hash(usersDb[username], password):
-        return jsonify({'message': 'Invalid credentials'}), 401
-    
-    return jsonify({'message': 'Logged in successfully'}), 200
+    filteredMovies = moviesDf[moviesDf['genres'].str.contains(genre, case=False, na=False)]
 
-@app.route('/movies/search', methods=['GET'])
-def searchMovies():
-    genre = request.args.get('genre', '')
-    language = request.args.get('language', '')
-    
-    if not genre or not language:
-        return jsonify({'message': 'Genre and language parameters are required'}), 400
-    
-    try:
-        # Filter movies based on the genre and language
-        filteredMovies = moviesDf[(moviesDf['genres'].str.contains(genre, case=False, na=False)) &
-                                  (moviesDf['original_language'] == language)]
-        
-        # Randomly select one movie from the filtered list
-        if not filteredMovies.empty:
-            randomMovie = filteredMovies.sample(n=1)
-            return jsonify(randomMovie.to_dict(orient='records')), 200
-        
-        return jsonify({'message': 'No movies found'}), 404
-    except Exception as e:
-        return jsonify({'message': str(e)}), 500
+    if filteredMovies.empty:
+        return jsonify({'message': f'No movies found for genre: {genre}'}), 404
+
+    # Select a random movie
+    random_movie = filteredMovies.sample(n=1)
+    return jsonify(random_movie[['title', 'overview', 'release_date', 'vote_average']].to_dict(orient='records')[0]), 200
+
+@app.route('/movies/details', methods=['GET'])
+def movieDetails():
+    title = request.args.get('title', '').strip()
+    if not title:
+        return jsonify({'message': 'Title parameter is required'}), 400
+
+    movie = moviesDf[moviesDf['title'].str.contains(title, case=False, na=False)].head(1)
+    if movie.empty:
+        return jsonify({'message': f'No details found for movie: {title}'}), 404
+    return jsonify(movie.to_dict(orient='records')[0]), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

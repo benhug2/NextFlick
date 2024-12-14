@@ -1,4 +1,4 @@
-#NextFlick
+NextFlick
 
 **Group Members: Bandhuli Maity, Branden Kooper, Ben Hug**
 

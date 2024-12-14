@@ -1,12 +1,12 @@
 #NextFlick
 
-Group Members: Bandhuli Maity, Branden Kooper, Ben Hug
+**Group Members: Bandhuli Maity, Branden Kooper, Ben Hug**
 
-Introduction
+**Introduction**
 
 NextFlick is a web-based application that provides personalized movie recommendations based on user moods and language preferences. Users can select their mood (e.g., Happy, Sad, Excited) and choose their preferred language to receive a movie recommendation tailored to their emotional state and linguistic preference. The system focuses on generating one movie at a time to help users decide quickly without endless scrolling. Users can create an account to save movies they love to their personalized "Favorites" list. With the click of a button, they can revisit their top picks anytime. 
 
-Technical Architecture
+**Technical Architecture**
 
 **Frontend (Browser):**
 

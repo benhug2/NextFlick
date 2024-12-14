@@ -60,7 +60,7 @@ If Python is installed, you will see the version number.
 
   Clone the GitHub repository:
 
-     git clone https://github.com/CS222-UIUC/MovieGenerate
+     https://github.com/CS222-UIUC/NextFlick
 
   Navigate into the cloned directory:
 
